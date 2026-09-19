@@ -1,0 +1,29 @@
+{
+  "name": "project-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts"
+  },
+  "bin": {
+    "forge": "./bin/forge.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@inquirer/prompts": "^8.7.2",
+    "chalk": "^6.0.0",
+    "commander": "^15.0.0",
+    "execa": "^10.0.1",
+    "ora": "^9.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2"
+  }
+}
