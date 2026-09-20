@@ -14,6 +14,14 @@ export const boilerplates: Boilerplate[] = [
     path: "ui/states",
     frameworks: ["react-vite-ts"],
   },
+  {
+    id: "supabase",
+    name: "Supabase",
+    description:
+      "Supabase client and environment configuration.",
+    path: "features/supabase",
+    frameworks: ["react-vite-ts", "react-vite-js"],
+  },
 ];
 
 export function getBoilerplate(id: string) {
