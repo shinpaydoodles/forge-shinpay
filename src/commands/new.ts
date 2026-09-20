@@ -3,14 +3,20 @@ import { input, select, confirm } from "@inquirer/prompts";
 import chalk from "chalk";
 import { generateReactProject } from "../generators/react.js";
 import { generateExpoProject } from "../generators/expo.js";
+import { setupTailwind } from "../setup/tailwind.js";
 
 export const newCommand = new Command("new")
   .description("Create a new project")
   .action(async () => {
     console.log();
-    console.log(chalk.bold.cyan("⚒ Forge Project Creator"));
+    console.log(
+      chalk.bold.cyan(
+        "⚒ Forge Project Creator"
+      )
+    );
     console.log();
 
+    // project name
     const projectName = await input({
       message: "Project name:",
       validate: (value) => {
@@ -18,7 +24,9 @@ export const newCommand = new Command("new")
           return "Project name is required.";
         }
 
-        if (!/^[a-zA-Z0-9-_]+$/.test(value)) {
+        if (
+          !/^[a-zA-Z0-9-_]+$/.test(value)
+        ) {
           return "Use only letters, numbers, hyphens, and underscores.";
         }
 
@@ -26,6 +34,7 @@ export const newCommand = new Command("new")
       },
     });
 
+    // project type
     const projectType = await select({
       message: "What are you building?",
       choices: [
@@ -45,7 +54,9 @@ export const newCommand = new Command("new")
     });
 
     let stack = "";
+    let useTailwind = false;
 
+    // web stacks
     if (projectType === "web") {
       stack = await select({
         message: "Choose your stack:",
@@ -60,8 +71,21 @@ export const newCommand = new Command("new")
           },
         ],
       });
+
+      // tailwind if web stack
+      if (
+        stack === "react-vite-ts" ||
+        stack === "react-vite-js"
+      ) {
+        useTailwind = await confirm({
+          message:
+            "Configure Tailwind CSS for this project?",
+          default: true,
+        });
+      }
     }
 
+    // mobile stack
     if (projectType === "mobile") {
       stack = "expo-ts";
 
@@ -72,27 +96,58 @@ export const newCommand = new Command("new")
       );
     }
 
+    // laravel stack
     if (projectType === "laravel") {
       stack = "laravel";
     }
 
+    // summary
     console.log();
 
-    console.log(chalk.bold("Project Configuration"));
-    console.log(chalk.gray("────────────────────────"));
+    console.log(
+      chalk.bold("Project Configuration")
+    );
 
-    console.log(`Name:  ${projectName}`);
-    console.log(`Stack: ${stack}`);
+    console.log(
+      chalk.gray(
+        "────────────────────────"
+      )
+    );
+
+    console.log(
+      `Name:     ${projectName}`
+    );
+
+    console.log(
+      `Stack:    ${stack}`
+    );
+
+    if (
+      stack === "react-vite-ts" ||
+      stack === "react-vite-js"
+    ) {
+      console.log(
+        `Tailwind: ${
+          useTailwind ? "Yes" : "No"
+        }`
+      );
+    }
 
     console.log();
 
+    // confirm creation
     const shouldCreate = await confirm({
       message: "Create project?",
       default: true,
     });
 
     if (!shouldCreate) {
-      console.log(chalk.yellow("Creation cancelled."));
+      console.log(
+        chalk.yellow(
+          "Creation cancelled."
+        )
+      );
+
       return;
     }
 
@@ -101,15 +156,38 @@ export const newCommand = new Command("new")
     try {
       switch (stack) {
         case "react-vite-ts":
-          await generateReactProject(projectName, "react-ts");
+          await generateReactProject(
+            projectName,
+            "react-ts"
+          );
+
+          if (useTailwind) {
+            await setupTailwind(
+              projectName
+            );
+          }
+
           break;
 
         case "react-vite-js":
-          await generateReactProject(projectName, "react");
+          await generateReactProject(
+            projectName,
+            "react"
+          );
+
+          if (useTailwind) {
+            await setupTailwind(
+              projectName
+            );
+          }
+
           break;
 
         case "expo-ts":
-          await generateExpoProject(projectName);
+          await generateExpoProject(
+            projectName
+          );
+
           break;
 
         case "laravel":
@@ -118,28 +196,53 @@ export const newCommand = new Command("new")
               "Laravel generator is coming next."
             )
           );
+
           return;
+
+        default:
+          throw new Error(
+            `Unsupported stack: ${stack}`
+          );
       }
 
       console.log();
+
       console.log(
-        chalk.bold.green("✓ Project created successfully!")
+        chalk.bold.green(
+          "✓ Project created successfully!"
+        )
       );
 
       console.log();
-      console.log(chalk.gray("Next steps:"));
+
+      console.log(
+        chalk.gray("Next steps:")
+      );
+
       console.log();
-      console.log(`  cd ${projectName}`);
-      console.log("  npm run dev");
+
+      console.log(
+        `  cd ${projectName}`
+      );
+
+      console.log(
+        "  npm run dev"
+      );
+
       console.log();
     } catch (error) {
       console.log();
+
       console.error(
-        chalk.red("Forge was unable to create the project.")
+        chalk.red(
+          "Forge was unable to create the project."
+        )
       );
 
       if (error instanceof Error) {
-        console.error(chalk.gray(error.message));
+        console.error(
+          chalk.gray(error.message)
+        );
       }
 
       process.exitCode = 1;
