@@ -1,0 +1,21 @@
+{
+  "id": "supabase-auth",
+  "name": "Supabase Auth",
+  "description": "Authentication service, provider, and hooks using Supabase Auth.",
+  "category": "feature",
+
+  "frameworks": [
+    "react-vite-ts"
+  ],
+
+  "dependencies": [
+    "@supabase/supabase-js"
+  ],
+
+  "files": [
+    {
+      "source": "./files/auth",
+      "destination": "./src/auth"
+    }
+  ]
+}

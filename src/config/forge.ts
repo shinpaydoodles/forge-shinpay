@@ -1,9 +1,11 @@
 import path from "node:path";
 import os from "node:os";
+import { fileURLToPath } from "node:url";
 
 export interface ForgeConfig {
   forgeHome: string;
-  boilerplatesRoot: string;
+  builtinBoilerplatesRoot: string;
+  customBoilerplatesRoot: string;
 }
 
 export function getForgeConfig(): ForgeConfig {
@@ -12,10 +14,25 @@ export function getForgeConfig(): ForgeConfig {
     ".forge"
   );
 
+  const currentFile = fileURLToPath(
+    import.meta.url
+  );
+
+  const currentDirectory =
+    path.dirname(currentFile);
+
+  const builtinBoilerplatesRoot =
+    path.resolve(
+      currentDirectory,
+      "../../boilerplates"
+    );
+
   return {
     forgeHome,
 
-    boilerplatesRoot: path.join(
+    builtinBoilerplatesRoot,
+
+    customBoilerplatesRoot: path.join(
       forgeHome,
       "boilerplates"
     ),

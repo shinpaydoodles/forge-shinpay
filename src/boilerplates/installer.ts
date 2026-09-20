@@ -212,7 +212,7 @@ export async function installBoilerplate(
   const config = getForgeConfig();
 
   const boilerplatesRoot =
-    config.boilerplatesRoot;
+    config.builtinBoilerplatesRoot;
 
   const boilerplateRoot = path.join(
     boilerplatesRoot,

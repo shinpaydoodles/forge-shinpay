@@ -72,9 +72,15 @@ export const infoCommand = new Command("info")
     );
 
     console.log(
-      `${chalk.gray(
-        "Boilerplates:"
-      )} ${config.boilerplatesRoot}`
+      `${chalk.gray("Built-in Boilerplates:")} ${
+        config.builtinBoilerplatesRoot
+      }`
+    );
+
+    console.log(
+      `${chalk.gray("Custom Boilerplates:")} ${
+        config.customBoilerplatesRoot
+      }`
     );
 
     console.log();

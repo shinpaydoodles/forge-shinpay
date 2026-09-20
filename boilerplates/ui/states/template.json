@@ -1,0 +1,17 @@
+{
+  "id": "ui-states",
+  "name": "UI States",
+  "description": "Reusable loading, error, empty and retry states.",
+  "category": "ui",
+
+  "frameworks": [
+    "react-vite-ts"
+  ],
+
+  "dependencies": [],
+
+  "files": {
+    "source": "./files",
+    "destination": "./src/components/states"
+  }
+}
