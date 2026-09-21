@@ -205,9 +205,10 @@ async function installFileEntry(
 }
 
 export async function installBoilerplate(
-  boilerplate: Boilerplate
+  boilerplate: Boilerplate,
+  projectRoot = process.cwd()
+
 ) {
-  const projectRoot = process.cwd();
 
   const config = getForgeConfig();
 

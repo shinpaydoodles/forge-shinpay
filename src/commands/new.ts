@@ -1,9 +1,12 @@
 import { Command } from "commander";
-import { input, select, confirm } from "@inquirer/prompts";
+import { input, select, confirm, checkbox } from "@inquirer/prompts";
 import chalk from "chalk";
 import { generateReactProject } from "../generators/react.js";
 import { generateExpoProject } from "../generators/expo.js";
 import { setupTailwind } from "../setup/tailwind.js";
+import { getBoilerplate } from "../boilerplates/registry.js";
+import { installBoilerplate } from "../boilerplates/installer.js";
+import path from "node:path";
 
 export const newCommand = new Command("new")
   .description("Create a new project")
@@ -56,6 +59,8 @@ export const newCommand = new Command("new")
     let stack = "";
     let useTailwind = false;
 
+    let selectedFeatures: string[] = [];
+
     // web stacks
     if (projectType === "web") {
       stack = await select({
@@ -83,6 +88,37 @@ export const newCommand = new Command("new")
           default: true,
         });
       }
+    }
+
+    selectedFeatures = await checkbox({
+      message: "Select features to include:",
+      choices: [
+        {
+          name: "Supabase",
+          value: "supabase",
+        },
+        {
+          name: "Supabase Auth",
+          value: "supabase-auth",
+        },
+        {
+          name: "TanStack Query",
+          value: "tanstack-query",
+        },
+        {
+          name: "Zustand",
+          value: "zustand",
+        },
+      ],
+    });
+
+    if(selectedFeatures.includes(
+      "supabase-auth") && 
+      !selectedFeatures.includes(
+        "supabase"
+    )) {
+      selectedFeatures.unshift
+        ("supabase");
     }
 
     // mobile stack
@@ -131,6 +167,29 @@ export const newCommand = new Command("new")
           useTailwind ? "Yes" : "No"
         }`
       );
+    } {
+      console.log(
+        `Features: ${
+          selectedFeatures.length > 0
+            ? selectedFeatures.join(", ")
+            : "None"
+        }`
+      )
+    }
+    const projectPath =
+      path.resolve(process.cwd(), projectName);
+
+    for (const featureId of selectedFeatures)
+    {
+      const boilerplate = getBoilerplate(featureId);
+
+      if (!boilerplate) {
+        throw new Error(
+          `Boilerplate not found: ${featureId}`
+        );
+      }
+
+      await installBoilerplate(boilerplate, projectPath);
     }
 
     console.log();
