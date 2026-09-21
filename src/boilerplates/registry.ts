@@ -38,6 +38,14 @@ export const boilerplates: Boilerplate[] = [
     path: "features/zustand",
     frameworks: ["react-vite-ts"],
   },
+  {
+    id: "tanstack-query",
+    name: "TanStack Query",
+    description:
+      "Data fetching, caching, and synchronization.",
+    path: "features/tanstack-query",
+    frameworks: ["react-vite-ts"],
+  },
 ];
 
 export function getBoilerplate(id: string) {

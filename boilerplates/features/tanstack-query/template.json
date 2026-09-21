@@ -1,0 +1,18 @@
+{
+  "id": "tanstack-query",
+  "name": "TanStack Query",
+  "description": "Server-state management and data fetching setup.",
+  "category": "feature",
+  "frameworks": [
+    "react-vite-ts"
+  ],
+  "dependencies": [
+    "@tanstack/react-query"
+  ],
+  "files": [
+    {
+      "source": "./files/query",
+      "destination": "./src/query"
+    }
+  ]
+}
