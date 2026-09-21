@@ -1,12 +1,32 @@
 import { Command } from "commander";
-import { input, select, confirm, checkbox } from "@inquirer/prompts";
+import {
+  input,
+  select,
+  confirm,
+  checkbox,
+} from "@inquirer/prompts";
 import chalk from "chalk";
-import { generateReactProject } from "../generators/react.js";
-import { generateExpoProject } from "../generators/expo.js";
-import { setupTailwind } from "../setup/tailwind.js";
-import { getBoilerplate } from "../boilerplates/registry.js";
-import { installBoilerplate } from "../boilerplates/installer.js";
 import path from "node:path";
+
+import {
+  generateReactProject,
+} from "../generators/react.js";
+
+import {
+  generateExpoProject,
+} from "../generators/expo.js";
+
+import {
+  setupTailwind,
+} from "../setup/tailwind.js";
+
+import {
+  getBoilerplate,
+} from "../boilerplates/registry.js";
+
+import {
+  installBoilerplate,
+} from "../boilerplates/installer.js";
 
 export const newCommand = new Command("new")
   .description("Create a new project")
@@ -19,16 +39,19 @@ export const newCommand = new Command("new")
     );
     console.log();
 
-    // project name
+    // Project name
     const projectName = await input({
       message: "Project name:",
+
       validate: (value) => {
         if (!value.trim()) {
           return "Project name is required.";
         }
 
         if (
-          !/^[a-zA-Z0-9-_]+$/.test(value)
+          !/^[a-zA-Z0-9-_]+$/.test(
+            value
+          )
         ) {
           return "Use only letters, numbers, hyphens, and underscores.";
         }
@@ -37,9 +60,10 @@ export const newCommand = new Command("new")
       },
     });
 
-    // project type
+    //Project type
     const projectType = await select({
       message: "What are you building?",
+
       choices: [
         {
           name: "Web Application",
@@ -58,70 +82,79 @@ export const newCommand = new Command("new")
 
     let stack = "";
     let useTailwind = false;
-
     let selectedFeatures: string[] = [];
 
-    // web stacks
+    // web configuration
+
     if (projectType === "web") {
       stack = await select({
         message: "Choose your stack:",
+
         choices: [
           {
-            name: "React + Vite + TypeScript",
+            name:
+              "React + Vite + TypeScript",
             value: "react-vite-ts",
           },
           {
-            name: "React + Vite + JavaScript",
+            name:
+              "React + Vite + JavaScript",
             value: "react-vite-js",
           },
         ],
       });
 
-      // tailwind if web stack
-      if (
-        stack === "react-vite-ts" ||
-        stack === "react-vite-js"
-      ) {
-        useTailwind = await confirm({
-          message:
-            "Configure Tailwind CSS for this project?",
-          default: true,
-        });
+      useTailwind = await confirm({
+        message:
+          "Configure Tailwind CSS for this project?",
+        default: true,
+      });
+
+      // feature selection for React + Vite + TypeScript
+      if (stack === "react-vite-ts") {
+        selectedFeatures =
+          await checkbox({
+            message:
+              "Select features to include:",
+
+            choices: [
+              {
+                name: "Supabase",
+                value: "supabase",
+              },
+              {
+                name: "Supabase Auth",
+                value: "supabase-auth",
+              },
+              {
+                name: "TanStack Query",
+                value:
+                  "tanstack-query",
+              },
+              {
+                name: "Zustand",
+                value: "zustand",
+              },
+            ],
+          });
+
+          // Ensure that Supabase is included if Supabase Auth is selected
+        if (
+          selectedFeatures.includes(
+            "supabase-auth"
+          ) &&
+          !selectedFeatures.includes(
+            "supabase"
+          )
+        ) {
+          selectedFeatures.unshift(
+            "supabase"
+          );
+        }
       }
     }
 
-    selectedFeatures = await checkbox({
-      message: "Select features to include:",
-      choices: [
-        {
-          name: "Supabase",
-          value: "supabase",
-        },
-        {
-          name: "Supabase Auth",
-          value: "supabase-auth",
-        },
-        {
-          name: "TanStack Query",
-          value: "tanstack-query",
-        },
-        {
-          name: "Zustand",
-          value: "zustand",
-        },
-      ],
-    });
-
-    if(selectedFeatures.includes(
-      "supabase-auth") && 
-      !selectedFeatures.includes(
-        "supabase"
-    )) {
-      selectedFeatures.unshift
-        ("supabase");
-    }
-
-    // mobile stack
+    // mobile configuration
     if (projectType === "mobile") {
       stack = "expo-ts";
 
@@ -132,16 +165,18 @@ export const newCommand = new Command("new")
       );
     }
 
-    // laravel stack
+    // laravel configuration
     if (projectType === "laravel") {
       stack = "laravel";
     }
 
-    // summary
+    // show project configuration
     console.log();
 
     console.log(
-      chalk.bold("Project Configuration")
+      chalk.bold(
+        "Project Configuration"
+      )
     );
 
     console.log(
@@ -164,41 +199,32 @@ export const newCommand = new Command("new")
     ) {
       console.log(
         `Tailwind: ${
-          useTailwind ? "Yes" : "No"
+          useTailwind
+            ? "Yes"
+            : "No"
         }`
       );
-    } {
-      console.log(
-        `Features: ${
-          selectedFeatures.length > 0
-            ? selectedFeatures.join(", ")
-            : "None"
-        }`
-      )
     }
-    const projectPath =
-      path.resolve(process.cwd(), projectName);
 
-    for (const featureId of selectedFeatures)
-    {
-      const boilerplate = getBoilerplate(featureId);
-
-      if (!boilerplate) {
-        throw new Error(
-          `Boilerplate not found: ${featureId}`
-        );
-      }
-
-      await installBoilerplate(boilerplate, projectPath);
-    }
+    console.log(
+      `Features: ${
+        selectedFeatures.length > 0
+          ? selectedFeatures.join(
+              ", "
+            )
+          : "None"
+      }`
+    );
 
     console.log();
 
-    // confirm creation
-    const shouldCreate = await confirm({
-      message: "Create project?",
-      default: true,
-    });
+    // create project
+    const shouldCreate =
+      await confirm({
+        message:
+          "Create project?",
+        default: true,
+      });
 
     if (!shouldCreate) {
       console.log(
@@ -213,18 +239,13 @@ export const newCommand = new Command("new")
     console.log();
 
     try {
+      //step 1: generate base project
       switch (stack) {
         case "react-vite-ts":
           await generateReactProject(
             projectName,
             "react-ts"
           );
-
-          if (useTailwind) {
-            await setupTailwind(
-              projectName
-            );
-          }
 
           break;
 
@@ -233,12 +254,6 @@ export const newCommand = new Command("new")
             projectName,
             "react"
           );
-
-          if (useTailwind) {
-            await setupTailwind(
-              projectName
-            );
-          }
 
           break;
 
@@ -252,7 +267,7 @@ export const newCommand = new Command("new")
         case "laravel":
           console.log(
             chalk.yellow(
-              "Laravel generator is coming next."
+              "Laravel generator is not implemented yet."
             )
           );
 
@@ -264,6 +279,49 @@ export const newCommand = new Command("new")
           );
       }
 
+      // get project path
+      const projectPath =
+        path.resolve(
+          process.cwd(),
+          projectName
+        );
+//    // step 2: setup Tailwind if selected
+      if (
+        useTailwind &&
+        (
+          stack ===
+            "react-vite-ts" ||
+          stack ===
+            "react-vite-js"
+        )
+      ) {
+        await setupTailwind(
+          projectPath
+        );
+      }
+      // step 3: install selected features
+      for (
+        const featureId of
+        selectedFeatures
+      ) {
+        const boilerplate =
+          getBoilerplate(
+            featureId
+          );
+
+        if (!boilerplate) {
+          throw new Error(
+            `Boilerplate not found: ${featureId}`
+          );
+        }
+
+        await installBoilerplate(
+          boilerplate,
+          projectPath
+        );
+      }
+
+      // step 4: complete
       console.log();
 
       console.log(
@@ -275,7 +333,9 @@ export const newCommand = new Command("new")
       console.log();
 
       console.log(
-        chalk.gray("Next steps:")
+        chalk.gray(
+          "Next steps:"
+        )
       );
 
       console.log();
@@ -284,9 +344,24 @@ export const newCommand = new Command("new")
         `  cd ${projectName}`
       );
 
-      console.log(
-        "  npm run dev"
-      );
+      if (
+        stack ===
+          "react-vite-ts" ||
+        stack ===
+          "react-vite-js"
+      ) {
+        console.log(
+          "  npm run dev"
+        );
+      }
+
+      if (
+        stack === "expo-ts"
+      ) {
+        console.log(
+          "  npx expo start"
+        );
+      }
 
       console.log();
     } catch (error) {
@@ -298,9 +373,13 @@ export const newCommand = new Command("new")
         )
       );
 
-      if (error instanceof Error) {
+      if (
+        error instanceof Error
+      ) {
         console.error(
-          chalk.gray(error.message)
+          chalk.gray(
+            error.message
+          )
         );
       }
 
