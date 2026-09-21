@@ -6,6 +6,9 @@
   "frameworks": [
     "react-vite-ts"
   ],
+  "requires": [
+    "supabase"
+  ],
   "dependencies": [
     "@supabase/supabase-js"
   ],

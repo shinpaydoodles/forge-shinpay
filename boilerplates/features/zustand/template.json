@@ -1,0 +1,18 @@
+{
+  "id": "zustand",
+  "name": "Zustand",
+  "description": "Lightweight client-side state management setup.",
+  "category": "feature",
+  "frameworks": [
+    "react-vite-ts"
+  ],
+  "dependencies": [
+    "zustand"
+  ],
+  "files": [
+    {
+      "source": "./files/store",
+      "destination": "./src/store"
+    }
+  ]
+}

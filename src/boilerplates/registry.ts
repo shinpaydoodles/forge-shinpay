@@ -30,6 +30,14 @@ export const boilerplates: Boilerplate[] = [
     path: "features/supabase-auth",
     frameworks: ["react-vite-ts"],
   },
+  {
+    id: "zustand",
+    name: "Zustand",
+    description:
+      "Lightweight client-side state management.",
+    path: "features/zustand",
+    frameworks: ["react-vite-ts"],
+  },
 ];
 
 export function getBoilerplate(id: string) {
