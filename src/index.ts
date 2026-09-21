@@ -14,6 +14,10 @@ import {
   infoCommand,
 } from "./commands/info.js";
 
+import {
+  doctorCommand,
+} from "./commands/doctor.js";
+
 const program = new Command();
 
 program
@@ -26,5 +30,11 @@ program
 program.addCommand(newCommand);
 program.addCommand(addCommand);
 program.addCommand(infoCommand);
+
+program.command("doctor")
+  .description(
+    "Check the current project for Forge configuration issues"
+  )
+  .action(doctorCommand);
 
 program.parse();

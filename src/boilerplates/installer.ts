@@ -13,6 +13,11 @@ import {
   getForgeConfig,
 } from "../config/forge.js";
 
+import { 
+  markInstalled,
+  readProjectState,
+} from "../project/state.js";
+
 interface BoilerplateFile {
   source: string;
   destination: string;
@@ -24,6 +29,7 @@ interface BoilerplateManifest {
   description?: string;
   category?: string;
   frameworks: string[];
+  requires?: string[];
   dependencies?: string[];
   files: BoilerplateFile[];
 }
@@ -242,6 +248,31 @@ export async function installBoilerplate(
       manifestContents
     ) as BoilerplateManifest;
 
+  const state =
+    await readProjectState(
+      projectRoot
+    );
+
+  const missingRequirements =
+    (manifest.requires ?? []).filter(
+      (requirement) =>
+        !state.installed.includes(
+          requirement
+        )
+    );
+
+  if (missingRequirements.length > 0) {
+    throw new Error(
+      `${manifest.name} requires: ${missingRequirements.join(
+        ", "
+      )}. Install ${
+        missingRequirements.length === 1
+          ? "it"
+          : "them"
+      } first.`
+    );
+  }
+
   await installDependencies(
     manifest.dependencies ?? [],
     projectRoot
@@ -260,6 +291,11 @@ export async function installBoilerplate(
       file
     );
   }
+
+  await markInstalled(
+    projectRoot,
+    manifest.id
+  );
 
   console.log();
 
