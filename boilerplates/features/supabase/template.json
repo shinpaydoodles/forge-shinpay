@@ -1,21 +1,22 @@
 {
-  "id": "supabase-auth",
-  "name": "Supabase Auth",
-  "description": "Authentication service, provider, and hooks using Supabase Auth.",
+  "id": "supabase",
+  "name": "Supabase",
+  "description": "Supabase client configuration and environment setup.",
   "category": "feature",
-
   "frameworks": [
     "react-vite-ts"
   ],
-
   "dependencies": [
     "@supabase/supabase-js"
   ],
-
   "files": [
     {
-      "source": "./files/auth",
-      "destination": "./src/auth"
+      "source": "./files/supabase.ts",
+      "destination": "./src/lib/supabase.ts"
+    },
+    {
+      "source": "./files/.env.example",
+      "destination": "./.env.example"
     }
   ]
 }
