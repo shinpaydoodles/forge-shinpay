@@ -18,21 +18,10 @@ import {
   readProjectState,
 } from "../project/state.js";
 
-interface BoilerplateFile {
-  source: string;
-  destination: string;
-}
-
-interface BoilerplateManifest {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  frameworks: string[];
-  requires?: string[];
-  dependencies?: string[];
-  files: BoilerplateFile[];
-}
+import {
+  parseManifest,
+  type BoilerplateFile,
+} from "./manifest.js";
 
 async function pathExists(
   targetPath: string
@@ -213,9 +202,7 @@ async function installFileEntry(
 export async function installBoilerplate(
   boilerplate: Boilerplate,
   projectRoot = process.cwd()
-
 ) {
-
   const config = getForgeConfig();
 
   const boilerplatesRoot =
@@ -244,9 +231,9 @@ export async function installBoilerplate(
     );
 
   const manifest =
-    JSON.parse(
+    parseManifest(
       manifestContents
-    ) as BoilerplateManifest;
+    );
 
   const state =
     await readProjectState(
