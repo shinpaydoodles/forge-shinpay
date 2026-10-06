@@ -13,6 +13,47 @@ const DEFAULT_STATE: ForgeProjectState = {
   installed: [],
 };
 
+function invalidState(statePath: string, reason: string): Error {
+  return new Error(
+    `Invalid Forge state at ${statePath}: ${reason}. Fix the file or move it aside to start with fresh state.`
+  );
+}
+
+function normalizeProjectState(
+  value: unknown,
+  statePath: string
+): ForgeProjectState {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    throw invalidState(statePath, "expected a JSON object");
+  }
+
+  const state = value as Record<string, unknown>;
+  const version = state.version === undefined
+    ? DEFAULT_STATE.version
+    : state.version;
+  const installed = state.installed === undefined
+    ? []
+    : state.installed;
+
+  if (!Number.isSafeInteger(version) || (version as number) < 1) {
+    throw invalidState(statePath, '"version" must be a positive integer');
+  }
+  if (!Array.isArray(installed) || !installed.every((id) => typeof id === "string")) {
+    throw invalidState(statePath, '"installed" must be an array of strings');
+  }
+  if (state.packageManager !== undefined && !isPackageManager(state.packageManager)) {
+    throw invalidState(statePath, '"packageManager" must be npm, pnpm, yarn, or bun');
+  }
+
+  return {
+    version: version as number,
+    installed,
+    ...(state.packageManager === undefined
+      ? {}
+      : { packageManager: state.packageManager as PackageManager }),
+  };
+}
+
 function getStatePath(
   projectRoot: string
 ) {
@@ -28,36 +69,24 @@ export async function readProjectState(
   const statePath =
     getStatePath(projectRoot);
 
+  let contents: string;
   try {
-    const contents =
-      await fs.readFile(
-        statePath,
-        "utf8"
-      );
-
-    const parsed =
-      JSON.parse(contents) as ForgeProjectState;
-
-    return {
-      version:
-        parsed.version ??
-        DEFAULT_STATE.version,
-
-      ...(isPackageManager(parsed.packageManager)
-        ? { packageManager: parsed.packageManager }
-        : {}),
-
-      installed:
-        Array.isArray(parsed.installed)
-          ? parsed.installed
-          : [],
-    };
-  } catch {
-    return {
-      ...DEFAULT_STATE,
-      installed: [],
-    };
+    contents = await fs.readFile(statePath, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return { ...DEFAULT_STATE, installed: [] };
+    }
+    throw error;
   }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contents);
+  } catch {
+    throw invalidState(statePath, "malformed JSON");
+  }
+
+  return normalizeProjectState(parsed, statePath);
 }
 
 export async function writeProjectState(
