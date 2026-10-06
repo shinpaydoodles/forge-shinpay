@@ -13,7 +13,7 @@ import {
   getForgeConfig,
 } from "../config/forge.js";
 
-import { 
+import {
   markInstalled,
   readProjectState,
 } from "../project/state.js";
@@ -34,6 +34,41 @@ async function pathExists(
   }
 }
 
+async function getInstalledDependencies(
+  projectRoot: string
+): Promise<Set<string>> {
+  const packageJsonPath = path.join(
+    projectRoot,
+    "package.json"
+  );
+
+  if (!(await pathExists(packageJsonPath))) {
+    return new Set();
+  }
+
+  try {
+    const contents =
+      await fs.readFile(
+        packageJsonPath,
+        "utf8"
+      );
+
+    const packageJson =
+      JSON.parse(contents);
+
+    return new Set([
+      ...Object.keys(
+        packageJson.dependencies ?? {}
+      ),
+      ...Object.keys(
+        packageJson.devDependencies ?? {}
+      ),
+    ]);
+  } catch {
+    return new Set();
+  }
+}
+
 async function installDependencies(
   dependencies: string[],
   projectRoot: string
@@ -42,8 +77,33 @@ async function installDependencies(
     return;
   }
 
+  const installedDependencies =
+    await getInstalledDependencies(
+      projectRoot
+    );
+
+  const missingDependencies =
+    dependencies.filter(
+      (dependency) =>
+        !installedDependencies.has(
+          dependency
+        )
+    );
+
+  if (missingDependencies.length === 0) {
+    console.log(
+      chalk.dim(
+        "Dependencies already installed. Skipping."
+      )
+    );
+
+    return;
+  }
+
   const spinner = ora(
-    "Installing dependencies..."
+    `Installing dependencies: ${missingDependencies.join(
+      ", "
+    )}...`
   ).start();
 
   try {
@@ -51,7 +111,7 @@ async function installDependencies(
       "npm",
       [
         "install",
-        ...dependencies,
+        ...missingDependencies,
       ],
       {
         cwd: projectRoot,
@@ -239,6 +299,20 @@ export async function installBoilerplate(
     await readProjectState(
       projectRoot
     );
+
+  if (
+    state.installed.includes(
+      manifest.id
+    )
+  ) {
+    console.log(
+      chalk.yellow(
+        `${manifest.name} is already installed. Skipping.`
+      )
+    );
+
+    return;
+  }
 
   const missingRequirements =
     (manifest.requires ?? []).filter(
