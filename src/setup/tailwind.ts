@@ -3,22 +3,31 @@ import path from "node:path";
 import { execa } from "execa";
 import ora from "ora";
 
+import {
+  getDependencyInstallCommand,
+  type PackageManager,
+} from "../project/package-manager.js";
+
 export async function setupTailwind(
-  projectRoot: string
+  projectRoot: string,
+  packageManager: PackageManager
 ) {
   const spinner = ora(
     "Setting up Tailwind CSS..."
   ).start();
 
   try {
-    // Install Tailwind + official Vite plugin
+    const {
+      command,
+      args,
+    } = getDependencyInstallCommand(packageManager, [
+      "tailwindcss",
+      "@tailwindcss/vite",
+    ]);
+
     await execa(
-      "npm",
-      [
-        "install",
-        "tailwindcss",
-        "@tailwindcss/vite",
-      ],
+      command,
+      args,
       {
         cwd: projectRoot,
         stdio: "pipe",
@@ -28,8 +37,13 @@ export async function setupTailwind(
     spinner.text =
       "Configuring Tailwind CSS...";
 
-    await updateViteConfig(projectRoot);
-    await updateGlobalCss(projectRoot);
+    await updateViteConfig(
+      projectRoot
+    );
+
+    await updateGlobalCss(
+      projectRoot
+    );
 
     spinner.succeed(
       "Tailwind CSS configured."

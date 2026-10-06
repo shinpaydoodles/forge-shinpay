@@ -1,44 +1,131 @@
 import { execa } from "execa";
 import ora from "ora";
 
-type ReactTemplate = "react-ts" | "react";
+import {
+  getProjectInstallCommand,
+  type PackageManager,
+} from "../project/package-manager.js";
 
-export async function generateReactProject(
+type ReactTemplate =
+  | "react-ts"
+  | "react";
+
+function getCreateCommand(
+  packageManager: PackageManager,
   projectName: string,
   template: ReactTemplate
 ) {
-  const spinner = ora(`Creating ${projectName}...`).start();
+  switch (packageManager) {
+    case "pnpm":
+      return {
+        command: "pnpm",
+        args: [
+          "create",
+          "vite",
+          projectName,
+          "--template",
+          template,
+        ],
+      };
+
+    case "yarn":
+      return {
+        command: "yarn",
+        args: [
+          "create",
+          "vite",
+          projectName,
+          "--template",
+          template,
+        ],
+      };
+
+    case "bun":
+      return {
+        command: "bun",
+        args: [
+          "create",
+          "vite",
+          projectName,
+          "--template",
+          template,
+        ],
+      };
+
+    case "npm":
+    default:
+      return {
+        command: "npm",
+        args: [
+          "create",
+          "vite@latest",
+          projectName,
+          "--",
+          "--template",
+          template,
+        ],
+      };
+  }
+}
+
+export async function generateReactProject(
+  projectName: string,
+  template: ReactTemplate,
+  packageManager: PackageManager
+) {
+  const spinner = ora(
+    `Creating ${projectName}...`
+  ).start();
 
   try {
-    spinner.text = "Creating Vite project...";
+    spinner.text =
+      `Creating Vite project with ${packageManager}...`;
+
+    const createCommand =
+      getCreateCommand(
+        packageManager,
+        projectName,
+        template
+      );
 
     await execa(
-      "npm",
-      [
-        "create",
-        "vite@latest",
-        projectName,
-        "--",
-        "--template",
-        template,
-      ],
+      createCommand.command,
+      createCommand.args,
       {
         stdio: "pipe",
       }
     );
 
-    spinner.succeed("Vite project created.");
+    spinner.succeed(
+      "Vite project created."
+    );
 
-    const installSpinner = ora("Installing dependencies...").start();
+    const installSpinner = ora(
+      `Installing dependencies with ${packageManager}...`
+    ).start();
 
-    await execa("npm", ["install"], {
-      cwd: projectName,
-      stdio: "pipe",
-    });
+    const installCommand =
+      getProjectInstallCommand(
+        packageManager
+      );
 
-    installSpinner.succeed("Dependencies installed.");
+    await execa(
+      installCommand.command,
+      installCommand.args,
+      {
+        cwd: projectName,
+        stdio: "pipe",
+      }
+    );
+
+    installSpinner.succeed(
+      "Dependencies installed."
+    );
   } catch (error) {
-    spinner.fail("Failed to create project.");
+    spinner.fail(
+      "Failed to create project."
+    );
+
     throw error;
   }
 }

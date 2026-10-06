@@ -1,9 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { isPackageManager, type PackageManager } from "./package-manager.js";
 
 export interface ForgeProjectState {
   version: number;
   installed: string[];
+  packageManager?: PackageManager;
 }
 
 const DEFAULT_STATE: ForgeProjectState = {
@@ -40,6 +42,10 @@ export async function readProjectState(
       version:
         parsed.version ??
         DEFAULT_STATE.version,
+
+      ...(isPackageManager(parsed.packageManager)
+        ? { packageManager: parsed.packageManager }
+        : {}),
 
       installed:
         Array.isArray(parsed.installed)
@@ -109,4 +115,16 @@ export async function isInstalled(
   return state.installed.includes(
     boilerplateId
   );
+}
+
+export async function setPackageManager(
+  projectRoot: string,
+  packageManager: PackageManager
+) {
+  const state = await readProjectState(projectRoot);
+  await writeProjectState(projectRoot, {
+    version: state.version,
+    packageManager,
+    installed: state.installed,
+  });
 }
