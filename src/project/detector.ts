@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { detectPackageManager, type PackageManager } from "./package-manager.js";
 
 export type Framework =
   | "react-vite"
@@ -19,20 +20,12 @@ export type Styling =
   | "css"
   | "unknown";
 
-export type PackageManager =
-  | "npm"
-  | "pnpm"
-  | "yarn"
-  | "bun"
-  | "composer"
-  | "unknown";
-
 export interface ProjectInfo {
   root: string;
   framework: Framework;
   language: Language;
   styling: Styling;
-  packageManager: PackageManager;
+  packageManager: PackageManager | "composer";
 }
 
 async function exists(filePath: string) {
@@ -80,52 +73,6 @@ function hasDependency(
     packageJson.dependencies?.[dependency] ||
       packageJson.devDependencies?.[dependency]
   );
-}
-
-async function detectPackageManager(
-  root: string
-): Promise<PackageManager> {
-  if (
-    await exists(
-      path.join(root, "pnpm-lock.yaml")
-    )
-  ) {
-    return "pnpm";
-  }
-
-  if (
-    await exists(
-      path.join(root, "yarn.lock")
-    )
-  ) {
-    return "yarn";
-  }
-
-  if (
-    await exists(
-      path.join(root, "bun.lock")
-    )
-  ) {
-    return "bun";
-  }
-
-  if (
-    await exists(
-      path.join(root, "package-lock.json")
-    )
-  ) {
-    return "npm";
-  }
-
-  if (
-    await exists(
-      path.join(root, "composer.lock")
-    )
-  ) {
-    return "composer";
-  }
-
-  return "unknown";
 }
 
 export async function detectProject(
@@ -198,8 +145,10 @@ export async function detectProject(
     styling = "css";
   }
 
-  const packageManager =
-    await detectPackageManager(projectRoot);
+  const packageManager = framework === "laravel" &&
+    (await exists(path.join(projectRoot, "composer.lock")))
+      ? "composer"
+      : await detectPackageManager(projectRoot);
 
   return {
     root: projectRoot,

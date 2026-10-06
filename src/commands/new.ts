@@ -28,6 +28,9 @@ import {
   installBoilerplate,
 } from "../boilerplates/installer.js";
 
+import type { PackageManager } from "../project/package-manager.js";
+import { setPackageManager } from "../project/state.js";
+
 export const newCommand = new Command("new")
   .description("Create a new project")
   .action(async () => {
@@ -83,6 +86,16 @@ export const newCommand = new Command("new")
     let stack = "";
     let useTailwind = false;
     let selectedFeatures: string[] = [];
+
+    const packageManager: PackageManager = await select({
+      message: "Select a package manager:",
+      choices: [
+        { name: "npm", value: "npm" },
+        { name: "pnpm", value: "pnpm" },
+        { name: "yarn", value: "yarn" },
+        { name: "bun", value: "bun" },
+      ],
+    });
 
     // web configuration
 
@@ -193,6 +206,10 @@ export const newCommand = new Command("new")
       `Stack:    ${stack}`
     );
 
+    console.log(
+      `Package Manager: ${packageManager}`
+    );
+
     if (
       stack === "react-vite-ts" ||
       stack === "react-vite-js"
@@ -244,7 +261,8 @@ export const newCommand = new Command("new")
         case "react-vite-ts":
           await generateReactProject(
             projectName,
-            "react-ts"
+            "react-ts",
+            packageManager
           );
 
           break;
@@ -252,14 +270,16 @@ export const newCommand = new Command("new")
         case "react-vite-js":
           await generateReactProject(
             projectName,
-            "react"
+            "react",
+            packageManager
           );
 
           break;
 
         case "expo-ts":
           await generateExpoProject(
-            projectName
+            projectName,
+            packageManager
           );
 
           break;
@@ -285,7 +305,9 @@ export const newCommand = new Command("new")
           process.cwd(),
           projectName
         );
-//    // step 2: setup Tailwind if selected
+      await setPackageManager(projectPath, packageManager);
+
+      // step 2: setup Tailwind if selected
       if (
         useTailwind &&
         (
@@ -296,7 +318,8 @@ export const newCommand = new Command("new")
         )
       ) {
         await setupTailwind(
-          projectPath
+          projectPath,
+          packageManager
         );
       }
       // step 3: install selected features
@@ -351,7 +374,7 @@ export const newCommand = new Command("new")
           "react-vite-js"
       ) {
         console.log(
-          "  npm run dev"
+          `  ${packageManager} run dev`
         );
       }
 
@@ -359,7 +382,7 @@ export const newCommand = new Command("new")
         stack === "expo-ts"
       ) {
         console.log(
-          "  npx expo start"
+          `  ${packageManager} exec expo start`
         );
       }
 

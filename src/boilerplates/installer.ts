@@ -24,6 +24,11 @@ import {
 } from "./manifest.js";
 import { InstallerError } from "./errors.js";
 
+import {
+  detectPackageManager,
+  getDependencyInstallCommand,
+} from "../project/package-manager.js";
+
 async function pathExists(
   targetPath: string
 ) {
@@ -101,6 +106,17 @@ async function installDependencies(
     return;
   }
 
+  const packageManager =
+    await detectPackageManager(
+      projectRoot
+    );
+
+  const { command, args } =
+    getDependencyInstallCommand(
+      packageManager,
+      missingDependencies
+    );
+
   const spinner = ora(
     `Installing dependencies: ${missingDependencies.join(
       ", "
@@ -109,11 +125,8 @@ async function installDependencies(
 
   try {
     await execa(
-      "npm",
-      [
-        "install",
-        ...missingDependencies,
-      ],
+      command,
+      args,
       {
         cwd: projectRoot,
         stdio: "pipe",
