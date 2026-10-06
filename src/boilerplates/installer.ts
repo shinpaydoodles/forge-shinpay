@@ -22,6 +22,7 @@ import {
   parseManifest,
   type BoilerplateFile,
 } from "./manifest.js";
+import { InstallerError } from "./errors.js";
 
 async function pathExists(
   targetPath: string
@@ -279,8 +280,9 @@ export async function installBoilerplate(
   );
 
   if (!(await pathExists(manifestPath))) {
-    throw new Error(
-      `Missing template.json for ${boilerplate.id}`
+    throw new InstallerError(
+      `Missing template.json for ${boilerplate.id}`,
+      "MANIFEST_NOT_FOUND"
     );
   }
 
