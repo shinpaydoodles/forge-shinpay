@@ -6,6 +6,7 @@ import {
   checkbox,
 } from "@inquirer/prompts";
 import chalk from "chalk";
+import { lstatSync } from "node:fs";
 import path from "node:path";
 
 import {
@@ -30,6 +31,24 @@ import {
 
 import type { PackageManager } from "../project/package-manager.js";
 import { setPackageManager } from "../project/state.js";
+
+function targetAlreadyExists(projectName: string): boolean {
+  const projectPath = path.resolve(process.cwd(), projectName);
+
+  if (!lstatSync(projectPath, { throwIfNoEntry: false })) {
+    return false;
+  }
+
+  console.error(
+    chalk.red(`A file or directory named "${projectName}" already exists.`)
+  );
+  console.log(
+    chalk.gray("Choose another project name. To add features to an existing project, run forge add inside it.")
+  );
+  process.exitCode = 1;
+
+  return true;
+}
 
 export const newCommand = new Command("new")
   .description("Create a new project")
@@ -62,6 +81,10 @@ export const newCommand = new Command("new")
         return true;
       },
     });
+
+    if (targetAlreadyExists(projectName)) {
+      return;
+    }
 
     //Project type
     const projectType = await select({
@@ -250,6 +273,10 @@ export const newCommand = new Command("new")
         )
       );
 
+      return;
+    }
+
+    if (targetAlreadyExists(projectName)) {
       return;
     }
 
